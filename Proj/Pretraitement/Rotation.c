@@ -32,6 +32,7 @@ void RotationManuelle(int* Running, double* angle)
 
 
 
+//void Rotation automatique()
 int main(int argc, char* argv[]) 
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) 
