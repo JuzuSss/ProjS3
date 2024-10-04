@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 
 SDL_Window *create_window(char *title, unsigned int width, unsigned int height)            //ceci est le tp SDL jusqu'a 
-{                                                                                          //la ligne 68;;
+{                                                                                          //la ligne 71;;
 	int sdl = SDL_Init(SDL_INIT_VIDEO);
 	if(sdl != 0)
 	{
@@ -68,16 +68,30 @@ void draw_rects(SDL_Renderer *renderer, int rects[][4], int colors[][3], size_t 
 	};
 }
 
-//int drawlines(SDL_Renderer *renderer, int rect[][], int colors[][], size_t len)
+	//////////////////////////////////////////////////////////////////////////////////////////////
+
+void draw_matrice(SDL_Renderer *renderer,int rows,int cols)
+{
+		for(int i = 1; i < cols; i++)
+		{
+			draw_line(renderer,i*100,0,i*100,cols*100);
+		}
+
+		for(int i = 1; i < rows; i++)
+		{
+			draw_line(renderer,10,i*100,rows*100,i*100);
+		}
+}
 
 
 int main(int argc, char *argv[]) {
     // Exemple de matrice
-    char *matrice[5] = {
+    char *matrice[6] = {
         "ABCDE",
         "FGHIJ",
         "KLMNO",
         "PQRST",
+        "UVWXY",
         "UVWXY"
     };
 
@@ -87,7 +101,7 @@ int main(int argc, char *argv[]) {
 
     /////////////////////////////////////////////////////////////////////////////////////////
     
-    SDL_Window *window = create_window("example", rows*100, cols*100);       //88 a 103 fait apparaitre une fenetre de bonne taille
+    SDL_Window *window = create_window("example", rows*100, cols*100);       //88 a 102 cree et fait apparaitre une fenetre de bonne taille
 
     if (!window)
         errx(EXIT_FAILURE, "Failed to create SDL window");
@@ -98,21 +112,14 @@ int main(int argc, char *argv[]) {
         errx(EXIT_FAILURE, "Failed to create SDL renderer");
 
     SDL_RenderPresent(renderer); // Make the window appear
-    sleep(2); // included in `unistd.h`
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-        int rects[][4] = {
-        { 10, (rows*100)-50, 50, 50 },
-        { 500, 150, 100, 200 },
-        { 550, 200, 150,  50 },
-    };
+    int rects[][4] = {                                                       //102 a 120 cree un carre gris de fond
+        { 0,0,rows*100,cols*100}};
     
     int colors[][3] = {
-        { 255,   0,   0 },
-        {   0, 255,   0 },
-        {   0,   0, 255 },
-    };
+        { 200, 200, 200 }};
     
     int keep_alive = 1;
     while (keep_alive)
@@ -121,12 +128,16 @@ int main(int argc, char *argv[]) {
         
         draw_rects(renderer, rects, colors, 3);
         
-        SDL_RenderPresent(renderer);
-    }
+        // SDL_RenderPresent(renderer);
     
-    close_program(window, renderer);
-
+    
     //////////////////////////////////////////////////////////////////////////////////////////
+
+				draw_matrice(renderer,rows,cols);
+
+    		SDL_RenderPresent(renderer);
+		}		
+    close_program(window, renderer);
     return EXIT_SUCCESS;
 
     return 0;
