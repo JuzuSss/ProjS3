@@ -6,58 +6,43 @@
 
 
 int main(int argc, char* argv[]) {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        return -1;
-    }
+    SDL_Init(SDL_INIT_VIDEO);
+    IMG_Init(IMG_INIT_PNG);
 
-    SDL_Window* window = SDL_CreateWindow("Rotation Image", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_SHOWN);
-    if (!window) {
-        SDL_Quit();
-        return -1;
-    }
-
+    SDL_Window* window = SDL_CreateWindow("Rotation Manuelle", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer) {
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return -1;
-    }
 
     SDL_Surface* surface = IMG_Load("test.jpg");
-    if (!surface) {
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return -1;
-    }
-
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
-    if (!texture) {
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return -1;
-    }
 
-    int running = 1;
+    int Running = 1;
     double angle = 0.0;
-    SDL_Rect dstrect = { 200, 150, 400, 300 };
 
-    while (running) {
-        RotationManuelle(&running, &angle);
+    while (Running) {
+        RotationManuelle(&Running, &angle);
 
         SDL_RenderClear(renderer);
-        SDL_RenderCopyEx(renderer, texture, NULL, &dstrect, angle, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, texture, NULL, NULL, angle, NULL, SDL_FLIP_NONE);
         SDL_RenderPresent(renderer);
+	SDL_Delay(16);
     }
+
+    SDL_Surface* rotatedSurface = SDL_CreateRGBSurfaceWithFormat(0, 800, 600, 32, SDL_PIXELFORMAT_RGBA32);
+    SDL_Texture* targetTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, 800, 600);
+    SDL_SetRenderTarget(renderer, targetTexture);
+    SDL_RenderCopyEx(renderer, texture, NULL, NULL, angle, NULL, SDL_FLIP_NONE);
+    SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_RGBA32, rotatedSurface->pixels, rotatedSurface->pitch);
+    IMG_SavePNG(rotatedSurface, "test.jpg");
+    SDL_FreeSurface(rotatedSurface);
+    SDL_DestroyTexture(targetTexture);
 
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    IMG_Quit();
     SDL_Quit();
 
     return 0;
 }
-
 

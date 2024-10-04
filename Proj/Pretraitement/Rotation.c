@@ -5,7 +5,6 @@
 
 
 
-
 void RotationManuelle(int* Running, double* angle)
 {
 	SDL_Event event;
@@ -29,39 +28,3 @@ void RotationManuelle(int* Running, double* angle)
 		}
 	}
 }
-
-
-
-void RotationAutomatique(int* Running, double* angle)
-{
-	SDL_Event event;
-	Uint32 start_time = SDL_GetTicks();
-
-	while(*Running)
-	{
-		while(SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_QUIT)
-			{
-				*Running = 0;
-			}
-		}
-		Uint32 time = SDL_GetTicks();
-		*angle += (time - start_time) * 0.01;
-		start_time = time;
-
-
-		if (*angle >= 360.0)
-        	{
-       		    *angle -= 360.0;
-       		}
-        	else if (*angle < 0.0)
-        	{
-        	    *angle += 360.0;
-        	}
-	}
-
-}
-
-
-
