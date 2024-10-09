@@ -289,7 +289,7 @@ Position* solver(char** matrice, char* mot, int v_len)
                     }
                 }
             }
-            printf("matrice[%i][%i] = %c\n", j, i, matrice[i][j]);
+            // printf("matrice[%i][%i] = %c\n", j, i, matrice[i][j]);
             j++;
         }    
         j = 0;
