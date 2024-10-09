@@ -47,7 +47,8 @@ Position* solv_diag_dr(char** matrice,char* mot, int i, int j, int v_len, int h_
 
   if(k = w_len)
   {
-    //TO DO
+    result->x1 = i + k - 1;
+    result->y1 = j + k - 1;
     return result;
   }
   return NULL;
@@ -105,10 +106,23 @@ Position* solv_vertical_d(char** matrice, char* mot, int i, int j, int v_len)
 {
   int k = 0;
   Position* result = (Position*)malloc(sizeof(Position));
-  //to do
+  result->x0 = i;
+  result->y0 = j;
   int w_len = strlen(mot);
-  //to do    
-  return NULL;
+    
+  while (k < w_len && i + k < v_len && matrice[i + k][j] == mot[k])
+  {
+      k++;
+  }
+    
+  if (k == w_len)
+  {
+      result->x1 = i + k - 1;
+      result->y1 = j;
+      return result;
+  }
+    
+    return NULL;
 }
 
 
@@ -116,9 +130,22 @@ Position* solv_horizontal_l(char** matrice, char* mot, int i, int j)
 {
   int k = 0;
   Position* result = (Position*)malloc(sizeof(Position));
-  //to do
+  result->x0 = i;
+  result->y0 = j;
   int w_len = strlen(mot);
-  //to do    
+    
+  while (k < w_len && j - k >= 0 && matrice[i][j - k] == mot[k])
+  {
+    k++;
+  }
+    
+  if (k == w_len)
+  {
+    result->x1 = i;
+    result->y1 = j - k + 1;
+    return result;
+  }
+    
   return NULL;
 }
 
@@ -127,9 +154,22 @@ Position* solv_diag_ul(char** matrice, char* mot, int i, int j)
 {
   int k = 0;
   Position* result = (Position*)malloc(sizeof(Position));
-  //to do
+  result->x0 = i;
+  result->y0 = j;
   int w_len = strlen(mot);
-  //to do    
+    
+  while (k < w_len && i - k >= 0 && j - k >= 0 && matrice[i - k][j - k] == mot[k])
+  {
+    k++;
+  }
+    
+  if (k == w_len)
+  {
+    result->x1 = i - k + 1;
+    result->y1 = j - k + 1;
+    return result;
+  }
+    
   return NULL;
 }
 
@@ -138,9 +178,22 @@ Position* solv_vertical_u(char** matrice, char* mot, int i, int j)
 {
   int k = 0;
   Position* result = (Position*)malloc(sizeof(Position));
-  //to do
+  result->x0 = i;
+  result->y0 = j;
   int w_len = strlen(mot);
-  //to do    
+    
+  while (k < w_len && i - k >= 0 && matrice[i - k][j] == mot[k])
+  {
+    k++;
+  }
+    
+  if (k == w_len)
+  {
+    result->x1 = i - k + 1;
+    result->y1 = j;
+    return result;
+  }
+    
   return NULL;
 }
 
