@@ -2,14 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL2/SDL.h>
-
+#define STB_IMAGE_IMPLEMENTATION
+#include "../../stb_master/stb_master/stb_image.h"
 
 
 unsigned char* readImage(const char* filename, int* width, int* height, int* channels) {
-    *width = 640;
-    *height = 480;
-    *channels = 3;
-    unsigned char* data = (unsigned char*)malloc((*width) * (*height) * (*channels));
+    unsigned char* data = stbi_load(filename, width, height, channels, 0);
+    if (data == NULL) {
+        printf("Erreur lors de la lecture de l'image: %s\n", stbi_failure_reason());
+    }
     return data;
 }
 
@@ -42,13 +43,27 @@ void convertToGrayscale(unsigned char *input, unsigned char *output, int width, 
     }
 }
 
+void debugImage(unsigned char *data, int width, int height, int channels) {
+    printf("Debugging image data:\n");
+    for (int i = 0; i < 10; i++) { // Print first 10 pixels
+        for (int j = 0; j < channels; j++) {
+            printf("%d ", data[i * channels + j]);
+        }
+        printf("\n");
+    }
+}
+
+
+
+
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("Usage: %s <image_filename>\n", argv[0]);
         return 1;
     }
 
-    const char *inputFilename = argv[0];
+    const char *inputFilename = argv[1];
     const char *outputFilename = "output.jpg"; // Chemin absolu
 
     int width, height, channels;
@@ -62,7 +77,7 @@ int main(int argc, char *argv[]) {
 
     // Convertir l'image en niveaux de gris
     convertToGrayscale(input, output, width, height, channels);
-
+    debugImage(output, width, height, channels);
     // Initialiser SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("Erreur SDL: %s\n", SDL_GetError());
