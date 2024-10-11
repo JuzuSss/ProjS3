@@ -1,88 +1,141 @@
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../../stb-master/stb-master/stb_image.h"
-#include "../../stb-master/stb-master/stb_image_write.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL2/SDL.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb-master/stb_image.h"
 
+// Déclaration de la fonction readImage
+unsigned char* readImage(const char* filename, int* width, int* height, int* channels);
 
+unsigned char* readImage(const char* filename, int* width, int* height, int* channels) {
+    unsigned char* data = stbi_load(filename, width, height, channels, 0);
+    if (data == NULL) {
+        printf("Erreur lors de la lecture de l'image: %s\n", stbi_failure_reason());
+    }
+    return data;
+}
 
-void medianFilter(unsigned char *input, unsigned char *output, int width, int height, int channels, int windowSize) {
-    int halfWindowSize = windowSize / 2;
-    int windowArea = windowSize * windowSize;
-    int *window = (int *)malloc(windowArea * sizeof(int));
-    int k, l, m, n, temp;
+void median_filter(unsigned char *input, unsigned char *output, int width, int height, int channels) {
+    int window_size = 3;
+    int half_window = window_size / 2;
+    int window_area = window_size * window_size;
+    unsigned char window[window_area * channels];
 
-    for (int i = halfWindowSize; i < height - halfWindowSize; i++) {
-        for (int j = halfWindowSize; j < width - halfWindowSize; j++) {
-            for (int c = 0; c < channels; c++) {
-                k = 0;
-                for (m = -halfWindowSize; m <= halfWindowSize; m++) {
-                    for (n = -halfWindowSize; n <= halfWindowSize; n++) {
-                        window[k++] = input[((i + m) * width + (j + n)) * channels + c];
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int count = 0;
+            for (int wy = -half_window; wy <= half_window; wy++) {
+                for (int wx = -half_window; wx <= half_window; wx++) {
+                    int iy = y + wy;
+                    int ix = x + wx;
+                    if (iy >= 0 && iy < height && ix >= 0 && ix < width) {
+                        for (int c = 0; c < channels; c++) {
+                            window[count * channels + c] = input[(iy * width + ix) * channels + c];
+                        }
+                        count++;
                     }
                 }
+            }
 
-                // Trier le tableau window
-                for (m = 0; m < windowArea; m++) {
-                    for (n = m + 1; n < windowArea; n++) {
-                        if (window[m] > window[n]) {
-                            temp = window[m];
-                            window[m] = window[n];
-                            window[n] = temp;
+            for (int c = 0; c < channels; c++) {
+                for (int i = 0; i < count - 1; i++) {
+                    for (int j = i + 1; j < count; j++) {
+                        if (window[i * channels + c] > window[j * channels + c]) {
+                            unsigned char temp = window[i * channels + c];
+                            window[i * channels + c] = window[j * channels + c];
+                            window[j * channels + c] = temp;
                         }
                     }
                 }
+                output[(y * width + x) * channels + c] = window[count / 2 * channels + c];
+            }
+        }
+    }
+}
 
-                // Assigner la valeur médiane au pixel de sortie
-                output[(i * width + j) * channels + c] = window[windowArea / 2];
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Usage: %s <image_filename>\n", *argv);
+        return 1;
+    }
+
+    const char *inputFilename = argv[1];
+    int width, height, channels;
+    unsigned char *imageData = readImage(inputFilename, &width, &height, &channels);
+    if (imageData == NULL) {
+        return 1;
+    }
+
+    printf("Image dimensions: %d x %d\n", width, height);
+    printf("Number of channels: %d\n", channels);
+
+    unsigned char *filteredData = (unsigned char *)malloc(width * height * channels);
+    median_filter(imageData, filteredData, width, height, channels);
+
+    // Initialiser SDL
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        printf("Erreur SDL: %s\n", SDL_GetError());
+        stbi_image_free(imageData);
+        free(filteredData);
+        return 1;
+    }
+
+    SDL_Window *window = SDL_CreateWindow("Image filtrée", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
+    if (!window) {
+        printf("Erreur SDL: %s\n", SDL_GetError());
+        SDL_Quit();
+        stbi_image_free(imageData);
+        free(filteredData);
+        return 1;
+    }
+
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer) {
+        printf("Erreur SDL: %s\n", SDL_GetError());
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        stbi_image_free(imageData);
+        free(filteredData);
+        return 1;
+    }
+
+    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, width, height);
+    if (!texture) {
+        printf("Erreur SDL: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        stbi_image_free(imageData);
+        free(filteredData);
+        return 1;
+    }
+
+    SDL_UpdateTexture(texture, NULL, filteredData, width * channels);
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    SDL_RenderPresent(renderer);
+
+    SDL_Event e;
+    int quit = 0;
+    while (!quit) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) {
+                quit = 1;
             }
         }
     }
 
-    free(window);
-}
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
-int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        printf("Usage: %s <input_image> <window_size>\n", argv);
-        return 1;
-    }
+    stbi_image_free(imageData);
+    free(filteredData);
 
-    int windowSize = atoi(argv);
-    if (windowSize % 2 == 0 || windowSize < 3) {
-        printf("La taille de la fenêtre doit être un entier impair supérieur ou égal à 3\n");
-        return 1;
-    }
-
-    int width, height, channels;
-    unsigned char *img = stbi_load(argv, &width, &height, &channels, 0);
-    if (img == NULL) {
-        printf("Erreur lors du chargement de l'image\n");
-        return 1;
-    }
-    printf("Image chargée : largeur = %d, hauteur = %d, canaux = %d\n", width, height, channels);
-
-    // Allouer dynamiquement la mémoire pour le tableau de sortie
-    unsigned char *output = (unsigned char *)malloc(width * height * channels);
-
-    medianFilter(img, output, width, height, channels, windowSize);
-    printf("Filtre médian appliqué\n");
-
-    if (!stbi_write_jpg("output.jpg", width, height, channels, output, 100)) {
-        printf("Erreur lors de la sauvegarde de l'image\n");
-        free(output);
-        stbi_image_free(img);
-        return 1;
-    }
-    printf("output.jpg\n");
-
-    // Libérer la mémoire allouée
-    free(output);
-    stbi_image_free(img);
-    printf("Mémoire libérée\n");
+    printf("L'image a été filtrée et affichée.\n");
 
     return 0;
 }
+
