@@ -6,9 +6,11 @@
 #include "../../stb_master/stb_master/stb_image.h"
 
 
-unsigned char* readImage(const char* filename, int* width, int* height, int* channels) {
+unsigned char* readImage(const char* filename, int* width, int* height, int* channels) 
+{
     unsigned char* data = stbi_load(filename, width, height, channels, 0);
-    if (data == NULL) {
+    if (data == NULL) 
+    {
         printf("Erreur lors de la lecture de l'image: %s\n", stbi_failure_reason());
     }
     return data;
@@ -20,14 +22,18 @@ void writeImage(const char* filename, unsigned char* data, int width, int height
 
 }
 
-void convertToGrayscale(unsigned char *input, unsigned char *output, int width, int height, int channels) {
-    if (channels < 3) {
+void convertToGrayscale(unsigned char *input, unsigned char *output, int width, int height, int channels) 
+{
+    if (channels < 3) 
+    {
         printf("L'image doit etre RGB.\n");
         return;
     }
 
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
+    for (int i = 0; i < height; i++) 
+    {
+        for (int j = 0; j < width; j++) 
+	{
             int index = (i * width + j) * channels;
             unsigned char r = input[index];
             unsigned char g = input[index + 1];
@@ -43,10 +49,13 @@ void convertToGrayscale(unsigned char *input, unsigned char *output, int width, 
     }
 }
 
-void debugImage(unsigned char *data, int width, int height, int channels) {
+void debugImage(unsigned char *data, int width, int height, int channels) 
+{
     printf("Debugging image data:\n");
-    for (int i = 0; i < 10; i++) { // Print first 10 pixels
-        for (int j = 0; j < channels; j++) {
+    for (int i = 0; i < 10; i++) 
+    {
+        for (int j = 0; j < channels; j++) 
+	{
             printf("%d ", data[i * channels + j]);
         }
         printf("\n");
@@ -64,7 +73,7 @@ int main(int argc, char *argv[]) {
     }
 
     const char *inputFilename = argv[1];
-    const char *outputFilename = "output.jpg"; // Chemin absolu
+    const char *outputFilename = "output.jpg";
 
     int width, height, channels;
     unsigned char *input = readImage(inputFilename, &width, &height, &channels);
@@ -75,10 +84,8 @@ int main(int argc, char *argv[]) {
 
     unsigned char *output = (unsigned char *)malloc(width * height * channels * sizeof(unsigned char));
 
-    // Convertir l'image en niveaux de gris
     convertToGrayscale(input, output, width, height, channels);
     debugImage(output, width, height, channels);
-    // Initialiser SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("Erreur SDL: %s\n", SDL_GetError());
         free(input);
@@ -86,7 +93,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Créer une fenêtre SDL
     SDL_Window *window = SDL_CreateWindow("Image en niveaux de gris", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
     if (!window) {
         printf("Erreur SDL: %s\n", SDL_GetError());
@@ -96,7 +102,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Créer un renderer SDL
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         printf("Erreur SDL: %s\n", SDL_GetError());
@@ -107,7 +112,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Créer une texture SDL
     SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, width, height);
     if (!texture) {
         printf("Erreur SDL: %s\n", SDL_GetError());
@@ -119,7 +123,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Mettre à jour la texture avec les données de l'image
     SDL_UpdateTexture(texture, NULL, output, width * channels);
 
     // Afficher l'image
@@ -150,8 +153,6 @@ int main(int argc, char *argv[]) {
     // Libérer la mémoire allouée
     free(input);
     free(output);
-
-    printf("L'image a été convertie en niveaux de gris et sauvegardée sous le nom %s\n", outputFilename);
 
     return 0;
 }
