@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
     }
 
     const char *inputFilename = argv[1];
-    const char *outputFilename = "output.jpg";
+    const char *outputFilename = argv[1];
 
     int width, height, channels;
     unsigned char *input = readImage(inputFilename, &width, &height, &channels);
@@ -125,12 +125,9 @@ int main(int argc, char *argv[]) {
 
     SDL_UpdateTexture(texture, NULL, output, width * channels);
 
-    // Afficher l'image
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
-
-    // Attendre que l'utilisateur ferme la fenêtre
     SDL_Event e;
     int quit = 0;
     while (!quit) {
@@ -140,17 +137,11 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-
-    // Sauvegarder l'image de sortie
     writeImage(outputFilename, output, width, height, channels);
-
-    // Libérer les ressources SDL
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
-    // Libérer la mémoire allouée
     free(input);
     free(output);
 
